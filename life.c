@@ -32,10 +32,12 @@
 
 const int WIN_WIDTH = 1024;
 const int WIN_HEIGHT = 768;
+const char* FONT = "../Basic-Regular.ttf";
+const int FONT_SIZE = 32;
 const char LIVE = '#';
 const char DEAD = '-';
 const int PX_SIZE = 8;
-const int BUTTON_SIZE = 16;
+const int BUTTON_SIZE = 32;
 const int GENERATORS = 14;
 struct px
 {
@@ -47,17 +49,18 @@ struct radio
     SDL_Rect button;
     SDL_Color col;
     SDL_Rect bound;
-    char* text;
-    void* (action)(char**, int, int);
+    SDL_Texture* text;
+    void (*action)(char**, int, int);
 };
 
 //prototypes
 void px_init(struct px* elem);
-void radio_init(struct radio* elem, char* str, void* fun);
+void radio_init(struct radio* elem, SDL_Renderer* r, char* str, void (*fun)( char**, int, int ));
 void countNeighbors(char c[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int n[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE]);
 void stepGen(char c[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int n[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE]);
 void updatePxFromChar(struct px p[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], char c[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE]);
 void renderGrid(SDL_Renderer* renderer, struct px arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE]);
+void renderRadio(SDL_Renderer* renderer, struct radio* elem);
 //Statics
 void addBlock(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y);
 void addBeehive(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y);
@@ -82,6 +85,7 @@ int main (int argc, char** argv)
 {
     //init of SDL
     SDL_Init(SDL_INIT_VIDEO);
+    TTF_Init();
     SDL_Window* window = SDL_CreateWindow("C's GoL", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIN_WIDTH, WIN_HEIGHT, SDL_WINDOW_SHOWN);
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
@@ -95,7 +99,14 @@ int main (int argc, char** argv)
     //mouse coords
     int mx, my;
     //function pointer for next shape to be generated
-    void* (fun)(char**, int, int);
+    void (*fun)( char**, int, int );
+        //init function pointer to Px
+        fun = addPx;
+    //marker for currently selected radio
+    struct px mark;
+        px_init(&mark);
+        mark.loc.x = 7*WIN_WIDTH/8 + BUTTON_SIZE/4;
+        mark.loc.y = BUTTON_SIZE/4;
     //event union
     SDL_Event e;
     //arrays
@@ -104,9 +115,6 @@ int main (int argc, char** argv)
         for (j = 0; j < WIN_HEIGHT/PX_SIZE; ++j)
             for (i = 0; i < WIN_WIDTH/PX_SIZE; ++i)
                 grid[i][j] = DEAD;
-        //add features
-        addGliderGun(grid, 10, 10);
-        addPentadecathlon(grid, 80, 20);
     //grid of count of living neighbours
     int ln[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE];
         for (j = 0; j < WIN_HEIGHT/PX_SIZE; ++j)
@@ -126,24 +134,24 @@ int main (int argc, char** argv)
     //radio buttons for functions
     struct radio buttons[GENERATORS];
         //set each button to a function
-        radio_init(&buttons[0], "Px", addPx);
-        radio_init(&buttons[1], "Block", addBlock);
-        radio_init(&buttons[2], "Beehive", addBeehive);
-        radio_init(&buttons[3], "Loaf", addLoaf);
-        radio_init(&buttons[4], "Boat", addBoat);
-        radio_init(&buttons[5], "Tub", addTub);
-        radio_init(&buttons[6], "Blinker", addBlinker);
-        radio_init(&buttons[7], "Toad", addToad);
-        radio_init(&buttons[8], "Beacon", addBeacon);
-        radio_init(&buttons[9], "Pulsar", addPulsar);
-        radio_init(&buttons[10], "Pentadecathlon", addPentadecathlon);
-        radio_init(&buttons[11], "Glider", addGlider);
-        radio_init(&buttons[12], "LWSS", addLWSS);
-        radio_init(&buttons[13], "GliderGun", addGliderGun);
+        radio_init(&buttons[0], renderer, "Px", addPx);
+        radio_init(&buttons[1], renderer, "Block", addBlock);
+        radio_init(&buttons[2], renderer, "Beehive", addBeehive);
+        radio_init(&buttons[3], renderer, "Loaf", addLoaf);
+        radio_init(&buttons[4], renderer, "Boat", addBoat);
+        radio_init(&buttons[5], renderer, "Tub", addTub);
+        radio_init(&buttons[6], renderer, "Blinker", addBlinker);
+        radio_init(&buttons[7], renderer, "Toad", addToad);
+        radio_init(&buttons[8], renderer, "Beacon", addBeacon);
+        radio_init(&buttons[9], renderer, "Pulsar", addPulsar);
+        radio_init(&buttons[10], renderer, "Pentadecathlon", addPentadecathlon);
+        radio_init(&buttons[11], renderer, "Glider", addGlider);
+        radio_init(&buttons[12], renderer, "LWSS", addLWSS);
+        radio_init(&buttons[13], renderer, "GliderGun", addGliderGun);
         //set vertical offset
         for (i = 0; i < GENERATORS; ++i)
         {
-            buttons[i].button.y = (WIN_HEIGHT/(GENERATORS+2)*BUTTON_SIZE)*(i+1);
+            buttons[i].button.y = i*(WIN_HEIGHT/GENERATORS);
             buttons[i].bound.y = buttons[i].button.y;
         }
 
@@ -155,9 +163,13 @@ int main (int argc, char** argv)
     SDL_RenderClear(renderer);
     //render grid
     renderGrid(renderer, pixels);
+    //render radios
+    for (i = 0; i < GENERATORS; ++i)
+        renderRadio( renderer, &buttons[i] );
     //render
     SDL_RenderPresent(renderer);
 
+    //main loop
     while (1)
     {
         if (SDL_PollEvent(&e))
@@ -174,35 +186,41 @@ int main (int argc, char** argv)
             else if (e.type == SDL_MOUSEBUTTONDOWN)
             {
                 SDL_GetMouseState(&mx, &my);
-                if (grid[mx/PX_SIZE][my/PX_SIZE] == LIVE)
+                //add element
+                if (mx < buttons[0].button.x)
                 {
-                    grid[mx/PX_SIZE][my/PX_SIZE] = DEAD;
+                    (*fun)( grid, mx/PX_SIZE, my/PX_SIZE );
                 }
-                else if (grid[mx/PX_SIZE][my/PX_SIZE] == DEAD)
-                {
-                    grid[mx/PX_SIZE][my/PX_SIZE] = LIVE;
-                }
+                //set function pointer
                 else
                 {
-                    printf("What the heck!\n");
+                    for (i = 0; i < GENERATORS; ++i)
+                    {
+                        if (my > buttons[i].button.y && my < (buttons[i].button.y + buttons[i].button.h))
+                        {
+                            fun = buttons[i].action;
+                            //add marker
+                            mark.loc.y = buttons[i].button.y + BUTTON_SIZE/4;
+                        }
+                    }
                 }
             }
         }
 
         //handle pause/next
-        if (paused && !next)
+        if (!paused || next)
         {
-            continue;
+            //count neighbours
+            countNeighbors(grid, ln);
+            //life happens
+            stepGen(grid, ln);
+            next = 0;
         }
         else
         {
             next = 0;
         }
 
-        //count neighbours
-        countNeighbors(grid, ln);
-        //life happens
-        stepGen(grid, ln);
         //update pixel array from grid
         updatePxFromChar(pixels, grid);
 
@@ -211,6 +229,12 @@ int main (int argc, char** argv)
         SDL_RenderClear(renderer);
         //render pixel array
         renderGrid(renderer, pixels);
+        //render radios
+        for (i = 0; i < GENERATORS; ++i)
+            renderRadio( renderer, &buttons[i] );
+        //render marker
+        SDL_SetRenderDrawColor(renderer, mark.col.r, mark.col.g, mark.col.b, mark.col.a);
+        SDL_RenderFillRect(renderer, &mark.loc);
         //render
         SDL_RenderPresent(renderer);
     }
@@ -236,28 +260,32 @@ void px_init(struct px* elem)
     elem->col.b = 0;
     elem->col.a = 0xFF;
 }
-void radio_init(struct radio* elem, char* str, void* fun)
+void radio_init(struct radio* elem, SDL_Renderer* r, char* str, void (*fun)( char**, int, int ))
 {
     //button
-    elem->button.x = 3*WIN_WIDTH/4;;
+    elem->button.x = 7*WIN_WIDTH/8;;
     elem->button.y = 0;
     elem->button.w = BUTTON_SIZE;
     elem->button.h = BUTTON_SIZE;
-    //default light-gray
-    elem->col.r = 0xF0;
-    elem->col.g = 0xF0;
-    elem->col.b = 0xF0;
+    //default Red
+    elem->col.r = 0xFF;
+    elem->col.g = 0x00;
+    elem->col.b = 0x00;
     elem->col.a = 0xFF;
 
     //text
-    elem->bound.x = 3*WIN_WIDTH/4 + BUTTON_SIZE;
+    elem->bound.x = elem->button.x + BUTTON_SIZE;
     elem->bound.y = 0;
-    elem->bound.w = BUTTON_SIZE;
+    elem->bound.w = 2*BUTTON_SIZE;
     elem->bound.h = BUTTON_SIZE;
-    //string
-    elem->text = str;
+    //set texture from string
+    TTF_Font* f = TTF_OpenFont( FONT, FONT_SIZE );
+    SDL_Surface* s = TTF_RenderText_Solid( f, str, elem->col );
+    elem->text = SDL_CreateTextureFromSurface( r, s );
+    SDL_FreeSurface(s);
+    TTF_CloseFont( f );
     //action
-    action = fun;
+    elem->action = fun;
 }
 void countNeighbors(char c[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int n[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE])
 {
@@ -413,6 +441,15 @@ void renderGrid(SDL_Renderer* renderer, struct px arr[WIN_WIDTH/PX_SIZE][WIN_HEI
             SDL_RenderFillRect(renderer, &arr[i][j].loc);
         }
     }
+}
+void renderRadio(SDL_Renderer* renderer, struct radio* elem)
+{
+    //render radio button box
+    SDL_SetRenderDrawColor( renderer, elem->col.r, elem->col.g, elem->col.b, elem->col.a );
+    SDL_RenderFillRect( renderer, &elem->button );
+
+    //render text
+    SDL_RenderCopy(renderer, elem->text, NULL, &elem->bound);
 }
 //object generators
 //Statics
