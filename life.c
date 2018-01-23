@@ -155,20 +155,6 @@ int main (int argc, char** argv)
             buttons[i].bound.y = buttons[i].button.y;
         }
 
-    //initial render
-    //update
-    updatePxFromChar(pixels, grid);
-    //setup renderer
-    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-    SDL_RenderClear(renderer);
-    //render grid
-    renderGrid(renderer, pixels);
-    //render radios
-    for (i = 0; i < GENERATORS; ++i)
-        renderRadio( renderer, &buttons[i] );
-    //render
-    SDL_RenderPresent(renderer);
-
     //main loop
     while (1)
     {
