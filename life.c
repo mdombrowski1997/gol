@@ -30,15 +30,15 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 
-const int WIN_WIDTH = 1024;
+const int WIN_WIDTH = 1300;
 const int WIN_HEIGHT = 768;
 const char* FONT = "../Basic-Regular.ttf";
 const int FONT_SIZE = 32;
 const char LIVE = '#';
 const char DEAD = '-';
-const int PX_SIZE = 8;
+const int PX_SIZE = 6;
 const int BUTTON_SIZE = 32;
-const int GENERATORS = 14;
+const int GENERATORS = 25;
 struct px
 {
     SDL_Rect loc;
@@ -72,14 +72,29 @@ void addBlinker(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y);
 void addToad(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y);
 void addBeacon(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y);
 void addPulsar(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y);
+void addTumbler(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y);
+void addUnix(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y);
 void addPentadecathlon(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y);
 //Spaceships
 void addGlider(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y);
 void addLWSS(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y);
 //Guns
 void addGliderGun(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y);
+//Shuttles
+void addTwinBeeShuttle(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y);
+void addQueenBeeShuttle(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y);
 //other
 void addPx(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y);
+void addQueenBee(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y);
+//Methuselahs
+void addAcorn(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y);
+void addSwitchEngine(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y);
+void addBHeptomino(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y);
+//Lakes
+void addPrePond(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y);
+void addPond(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y);
+void addLake(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y);
+
 
 int main (int argc, char** argv)
 {
@@ -148,6 +163,17 @@ int main (int argc, char** argv)
         radio_init(&buttons[11], renderer, "Glider", addGlider);
         radio_init(&buttons[12], renderer, "LWSS", addLWSS);
         radio_init(&buttons[13], renderer, "GliderGun", addGliderGun);
+        radio_init(&buttons[14], renderer, "QueenBee", addQueenBee);
+        radio_init(&buttons[15], renderer, "QueenBeeShuttle", addQueenBeeShuttle);
+        radio_init(&buttons[16], renderer, "TwinBeeShuttle", addTwinBeeShuttle);
+        radio_init(&buttons[17], renderer, "Unix", addUnix);
+        radio_init(&buttons[18], renderer, "Tumbler", addTumbler);
+        radio_init(&buttons[19], renderer, "Acorn", addAcorn);
+        radio_init(&buttons[20], renderer, "SwitchEngine", addSwitchEngine);
+        radio_init(&buttons[21], renderer, "BHeptomino", addBHeptomino);
+        radio_init(&buttons[22], renderer, "PrePond", addPrePond);
+        radio_init(&buttons[23], renderer, "Pond", addPond);
+        radio_init(&buttons[24], renderer, "Lake", addLake);
         //set vertical offset
         for (i = 0; i < GENERATORS; ++i)
         {
@@ -561,6 +587,50 @@ void addPulsar(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
     arr[x+5][y+4] = LIVE;
     
 }
+void addTumbler(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
+{
+    //left pair
+    arr[x+0][y+1] = LIVE;
+    arr[x+0][y+2] = LIVE;
+    //left slope
+    arr[x+1][y+0] = LIVE;
+    arr[x+2][y+1] = LIVE;
+    arr[x+3][y+2] = LIVE;
+    //bottom left triple
+    arr[x+2][y+3] = LIVE;
+    arr[x+2][y+4] = LIVE;
+    arr[x+3][y+4] = LIVE;
+
+    //bottom right triple
+    arr[x+5][y+4] = LIVE;
+    arr[x+6][y+3] = LIVE;
+    arr[x+6][y+4] = LIVE;
+    //right slope
+    arr[x+5][y+2] = LIVE;
+    arr[x+6][y+1] = LIVE;
+    arr[x+7][y+0] = LIVE;
+    //right pair
+    arr[x+8][y+1] = LIVE;
+    arr[x+8][y+2] = LIVE;
+}
+void addUnix(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
+{
+    //top block
+    addBlock(arr, x+1, y+0);
+    //right block
+    addBlock(arr, x+6, y+5);
+    //left pair
+    arr[x+0][y+4] = LIVE;
+    arr[x+0][y+5] = LIVE;
+    //slope
+    arr[x+1][y+3] = LIVE;
+    arr[x+2][y+4] = LIVE;
+    arr[x+3][y+5] = LIVE;
+    arr[x+4][y+6] = LIVE;
+    //bottom pair
+    arr[x+2][y+7] = LIVE;
+    arr[x+3][y+7] = LIVE;
+}
 void addPentadecathlon(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
 {
     //top T part
@@ -673,8 +743,155 @@ void addGliderGun(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
     //right block
     addBlock(arr, x+34, y+2);
 }
+//Shuttles
+void addTwinBeeShuttle(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
+{
+    //Top-Left block
+    addBlock(arr, x+0, y+1);
+    //Bottom-Left block
+    addBlock(arr, x+0, y+8);
+    //Top guy
+    arr[x+17][y+0] = LIVE;
+    arr[x+17][y+1] = LIVE;
+    arr[x+17][y+3] = LIVE;
+    arr[x+18][y+0] = LIVE;
+    arr[x+18][y+3] = LIVE;
+    arr[x+19][y+1] = LIVE;
+    arr[x+19][y+2] = LIVE;
+    arr[x+19][y+3] = LIVE;
+    //Bottom guy
+    arr[x+17][y+7] = LIVE;
+    arr[x+17][y+9] = LIVE;
+    arr[x+17][y+10] = LIVE;
+    arr[x+18][y+7] = LIVE;
+    arr[x+18][y+10] = LIVE;
+    arr[x+19][y+7] = LIVE;
+    arr[x+19][y+8] = LIVE;
+    arr[x+19][y+9] = LIVE;
+    //Right block
+    addBlock(arr, x+27, y+1);
+}
+void addQueenBeeShuttle(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)  //trans
+{
+    //left block
+    addBlock(arr, x+0, y+3);
+    //queen
+    addQueenBee(arr, x+12, y+0);
+    //right block
+    addBlock(arr, x+20, y+2);
+}
 //other
 void addPx(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
 {
     arr[x+0][y+0] = LIVE;
+}
+void addQueenBee(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
+{
+    //tail
+    arr[x][y] = LIVE;
+    arr[x][y+1] = LIVE;
+    arr[x][y+5] = LIVE;
+    arr[x][y+6] = LIVE;
+    //base
+    arr[x+1][y+2] = LIVE;
+    arr[x+1][y+3] = LIVE;
+    arr[x+1][y+4] = LIVE;
+    //triangle
+    arr[x+2][y+1] = LIVE;
+    arr[x+2][y+5] = LIVE;
+    arr[x+3][y+2] = LIVE;
+    arr[x+3][y+4] = LIVE;
+    arr[x+4][y+3] = LIVE;
+}
+void addAcorn(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
+{
+    //left 3
+    arr[x+0][y+2] = LIVE;
+    arr[x+1][y+2] = LIVE;
+    arr[x+1][y+0] = LIVE;
+    //right 4
+    arr[x+3][y+1] = LIVE;
+    arr[x+4][y+2] = LIVE;
+    arr[x+5][y+2] = LIVE;
+    arr[x+6][y+2] = LIVE;
+}
+void addSwitchEngine(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
+{
+    //left 3
+    arr[x+0][y+1] = LIVE;
+    arr[x+1][y+0] = LIVE;
+    arr[x+1][y+2] = LIVE;
+    //top right
+    arr[x+3][y+0] = LIVE;
+    //bottom right tetromino
+    arr[x+3][y+3] = LIVE;
+    arr[x+4][y+2] = LIVE;
+    arr[x+4][y+3] = LIVE;
+    arr[x+5][y+3] = LIVE;
+}
+void addBHeptomino(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
+{
+    arr[x+0][y+0] = LIVE;
+    arr[x+0][y+1] = LIVE;
+    arr[x+1][y+1] = LIVE;
+    arr[x+1][y+2] = LIVE;
+    arr[x+2][y+0] = LIVE;
+    arr[x+2][y+1] = LIVE;
+    arr[x+3][y+0] = LIVE;
+}
+//Lakes
+void addPrePond(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
+{
+    //triple
+    arr[x+0][y+1] = LIVE;
+    arr[x+1][y+0] = LIVE;
+    arr[x+1][y+1] = LIVE;
+    //tail
+    arr[x+2][y+2] = LIVE;
+}
+void addPond(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
+{
+    //top
+    arr[x+1][y+0] = LIVE;
+    arr[x+2][y+0] = LIVE;
+    //right
+    arr[x+3][y+1] = LIVE;
+    arr[x+3][y+2] = LIVE;
+    //bottom
+    arr[x+1][y+3] = LIVE;
+    arr[x+2][y+3] = LIVE;
+    //left
+    arr[x+0][y+1] = LIVE;
+    arr[x+0][y+2] = LIVE;
+}
+void addLake(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
+{
+    //top (going clockwise)
+    arr[x+4][y+0] = LIVE;
+    arr[x+5][y+0] = LIVE;
+    arr[x+6][y+1] = LIVE;
+    arr[x+6][y+2] = LIVE;
+    arr[x+7][y+3] = LIVE;
+    arr[x+8][y+3] = LIVE;
+    //right
+    arr[x+9][y+4] = LIVE;
+    arr[x+9][y+5] = LIVE;
+    arr[x+8][y+6] = LIVE;
+    arr[x+7][y+6] = LIVE;
+    arr[x+6][y+7] = LIVE;
+    arr[x+6][y+8] = LIVE;
+    //bottom
+    arr[x+5][y+9] = LIVE;
+    arr[x+4][y+9] = LIVE;
+    arr[x+3][y+8] = LIVE;
+    arr[x+3][y+7] = LIVE;
+    arr[x+2][y+6] = LIVE;
+    arr[x+1][y+6] = LIVE;
+    //left
+    arr[x+0][y+5] = LIVE;
+    arr[x+0][y+4] = LIVE;
+    arr[x+1][y+3] = LIVE;
+    arr[x+2][y+3] = LIVE;
+    arr[x+3][y+2] = LIVE;
+    arr[x+3][y+1] = LIVE;
 }
