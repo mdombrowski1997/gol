@@ -1,5 +1,5 @@
 /*
-    Conway's Game of Life Repolica
+    Conway's Game of Life Replica
     Rules:
         1. Any LIVE cell with less than 2 live neighbours dies, underpopulation
         2. Any LIVE cell with more than 3 live neighbours dies, overpopulation
