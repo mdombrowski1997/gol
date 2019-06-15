@@ -23,15 +23,15 @@
         *  LWSS
 
     larger structures:
-        *  Gosmer Glider Gun
+        *  Gosper Glider Gun
 */
 
 #include <stdio.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 
-const int WIN_WIDTH = 1300;
-const int WIN_HEIGHT = 768;
+const int WIN_WIDTH = 1600;
+const int WIN_HEIGHT = 900;
 const char* FONT = "../Basic-Regular.ttf";
 const int FONT_SIZE = 32;
 const char LIVE = '#';
@@ -43,6 +43,7 @@ struct px
 {
     SDL_Rect loc;
     SDL_Color col;
+    int age;
 };
 struct radio
 {
@@ -96,8 +97,7 @@ void addPond(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y);
 void addLake(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y);
 
 
-int main (int argc, char** argv)
-{
+int main (int argc, char** argv) {
     //init of SDL
     SDL_Init(SDL_INIT_VIDEO);
     TTF_Init();
@@ -137,10 +137,8 @@ int main (int argc, char** argv)
                 ln[i][j] = 0;
     //pixel array
     struct px pixels[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE];
-        for ( i = 0; i < WIN_WIDTH/PX_SIZE; ++i )
-        {
-            for ( j = 0; j < WIN_HEIGHT/PX_SIZE; ++j )
-            {
+        for ( i = 0; i < WIN_WIDTH/PX_SIZE; ++i ) {
+            for ( j = 0; j < WIN_HEIGHT/PX_SIZE; ++j ) {
                 px_init(&pixels[i][j]);
                 pixels[i][j].loc.x = i*PX_SIZE;
                 pixels[i][j].loc.y = j*PX_SIZE;
@@ -175,19 +173,15 @@ int main (int argc, char** argv)
         radio_init(&buttons[23], renderer, "Pond", addPond);
         radio_init(&buttons[24], renderer, "Lake", addLake);
         //set vertical offset
-        for (i = 0; i < GENERATORS; ++i)
-        {
+        for (i = 0; i < GENERATORS; ++i) {
             buttons[i].button.y = i*(WIN_HEIGHT/GENERATORS);
             buttons[i].bound.y = buttons[i].button.y;
         }
 
     //main loop
-    while (1)
-    {
-        if (SDL_PollEvent(&e))
-        {
-            if (e.type == SDL_KEYDOWN)
-            {
+    while (1) {
+        if (SDL_PollEvent(&e)) {
+            if (e.type == SDL_KEYDOWN) {
                 if (e.key.keysym.sym == SDLK_ESCAPE)
                     break;
                 else if (e.key.keysym.sym == SDLK_p)    //toggle paused with p
@@ -195,19 +189,15 @@ int main (int argc, char** argv)
                 else if (e.key.keysym.sym == SDLK_SPACE)//advance frame with space
                     next = 1;
             }
-            else if (e.type == SDL_MOUSEBUTTONDOWN)
-            {
+            else if (e.type == SDL_MOUSEBUTTONDOWN) {
                 SDL_GetMouseState(&mx, &my);
                 //add element
-                if (mx < buttons[0].button.x)
-                {
+                if (mx < buttons[0].button.x) {
                     (*fun)( grid, mx/PX_SIZE, my/PX_SIZE );
                 }
                 //set function pointer
-                else
-                {
-                    for (i = 0; i < GENERATORS; ++i)
-                    {
+                else {
+                    for (i = 0; i < GENERATORS; ++i) {
                         if (my > buttons[i].button.y && my < (buttons[i].button.y + buttons[i].button.h))
                         {
                             fun = buttons[i].action;
@@ -220,16 +210,14 @@ int main (int argc, char** argv)
         }
 
         //handle pause/next
-        if (!paused || next)
-        {
+        if (!paused || next) {
             //count neighbours
             countNeighbors(grid, ln);
             //life happens
             stepGen(grid, ln);
             next = 0;
         }
-        else
-        {
+        else {
             next = 0;
         }
 
@@ -237,7 +225,7 @@ int main (int argc, char** argv)
         updatePxFromChar(pixels, grid);
 
         //rendering
-        SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+        SDL_SetRenderDrawColor(renderer, 0, 0xFF, 0, 0xFF);
         SDL_RenderClear(renderer);
         //render pixel array
         renderGrid(renderer, pixels);
@@ -259,8 +247,7 @@ int main (int argc, char** argv)
 }
 
 //general
-void px_init(struct px* elem)
-{
+void px_init(struct px* elem) {
     elem->loc.x = 0;
     elem->loc.y = 0;
     elem->loc.w = PX_SIZE;
@@ -272,8 +259,7 @@ void px_init(struct px* elem)
     elem->col.b = 0;
     elem->col.a = 0xFF;
 }
-void radio_init(struct radio* elem, SDL_Renderer* r, char* str, void (*fun)( char**, int, int ))
-{
+void radio_init(struct radio* elem, SDL_Renderer* r, char* str, void (*fun)( char**, int, int )) {
     //button
     elem->button.x = 7*WIN_WIDTH/8;;
     elem->button.y = 0;
@@ -299,69 +285,50 @@ void radio_init(struct radio* elem, SDL_Renderer* r, char* str, void (*fun)( cha
     //action
     elem->action = fun;
 }
-void countNeighbors(char c[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int n[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE])
-{
+void countNeighbors(char c[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int n[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE]) {
     int i, j;
 
-    for (j = 0; j < WIN_HEIGHT/PX_SIZE; ++j)
-    {
-        for (i = 0; i < WIN_WIDTH/PX_SIZE; ++i)
-        {
+    for (j = 0; j < WIN_HEIGHT/PX_SIZE; ++j) {
+        for (i = 0; i < WIN_WIDTH/PX_SIZE; ++i) {
             //clear
             n[i][j] = 0;
             //starting above, going clockwise; 2 to a block
-            if (j > 0)
-            {
-                if (c[i][j-1] == LIVE)
-                {
+            if (j > 0) {
+                if (c[i][j-1] == LIVE) {
                     ++n[i][j];         //up
                 }
-                if (i < (WIN_WIDTH/PX_SIZE-1))
-                {
-                    if (c[i+1][j-1] == LIVE)
-                    {
+                if (i < (WIN_WIDTH/PX_SIZE-1)) {
+                    if (c[i+1][j-1] == LIVE) {
                         ++n[i][j];     //up-right
                     }
                 }
             }
-            if (i < (WIN_WIDTH/PX_SIZE-1))
-            {
-                if (c[i+1][j] == LIVE)
-                {
+            if (i < (WIN_WIDTH/PX_SIZE-1)) {
+                if (c[i+1][j] == LIVE) {
                     ++n[i][j];         //right
                 }
-                if (i < (WIN_HEIGHT/PX_SIZE-1))
-                {
-                    if (c[i+1][j+1] == LIVE)
-                    {
+                if (i < (WIN_HEIGHT/PX_SIZE-1)) {
+                    if (c[i+1][j+1] == LIVE) {
                         ++n[i][j];     //right-down
                     }
                 }
             }
-            if (j < (WIN_HEIGHT/PX_SIZE-1))
-            {
-                if (c[i][j+1] == LIVE)
-                {
+            if (j < (WIN_HEIGHT/PX_SIZE-1)) {
+                if (c[i][j+1] == LIVE) {
                     ++n[i][j];         //down
                 }
-                if (i > 0)
-                {
-                    if (c[i-1][j+1] == LIVE)
-                    {
+                if (i > 0) {
+                    if (c[i-1][j+1] == LIVE) {
                         ++n[i][j];     //down-left
                     }
                 }
             }
-            if (i > 0)
-            {
-                if (c[i-1][j] == LIVE)
-                {
+            if (i > 0) {
+                if (c[i-1][j] == LIVE) {
                     ++n[i][j];         //left
                 }
-                if (j > 0)
-                {
-                    if (c[i-1][j-1] == LIVE)
-                    {
+                if (j > 0) {
+                    if (c[i-1][j-1] == LIVE) {
                         ++n[i][j];     //left-up
                     }
                 }
@@ -369,93 +336,77 @@ void countNeighbors(char c[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int n[WIN_WID
         }
     }
 }
-void stepGen(char c[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int n[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE])
-{
+void stepGen(char c[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int n[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE]) {
     int i, j;
 
-    for (j = 0; j < WIN_HEIGHT/PX_SIZE; ++j)
-    {
-        for (i = 0; i < WIN_WIDTH/PX_SIZE; ++i)
-        {
+    for (j = 0; j < WIN_HEIGHT/PX_SIZE; ++j) {
+        for (i = 0; i < WIN_WIDTH/PX_SIZE; ++i) {
             //3. birth
-            if (c[i][j] == DEAD)
-            {
-                if (n[i][j] == 3)
-                {
+            if (c[i][j] == DEAD) {
+                if (n[i][j] == 3) {
                     c[i][j] = LIVE;
                 }
             }
-            else if (c[i][j] == LIVE)
-            {
+            else if (c[i][j] == LIVE) {
                 //1. underpopulation
-                if (n[i][j] < 2)
-                {
+                if (n[i][j] < 2) {
                     c[i][j] = DEAD;
                 }
                 //2. overpopulation
-                else if (n[i][j] > 3)
-                {
+                else if (n[i][j] > 3) {
                     c[i][j] = DEAD;
                 }
                 //4. life
-                else if ((n[i][j] == 2) || (n[i][j] == 3))
-                {
+                else if ((n[i][j] == 2) || (n[i][j] == 3)) {
                     c[i][j] = LIVE;
                 }
             }
-            else
-            {
+            else {
                 printf("Error: chars[%i %i] == %c\n", i, j, c[i][j]);
                 break;
             }
         }
     }
 }
-void updatePxFromChar(struct px p[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], char c[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE])
-{
+void updatePxFromChar(struct px p[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], char c[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE]) {
     int i, j;
 
     //update pixel array from grid
-    for (j = 0; j < WIN_HEIGHT/PX_SIZE; ++j)
-    {
-        for (i = 0; i < WIN_WIDTH/PX_SIZE; ++i)
-        {
-            if (c[i][j] == DEAD)
-            {
-                p[i][j].col.r = 0;
-                p[i][j].col.g = 0;
-                p[i][j].col.b = 0;
+    for (j = 0; j < WIN_HEIGHT/PX_SIZE; ++j) {
+        for (i = 0; i < WIN_WIDTH/PX_SIZE; ++i) {
+            if (c[i][j] == DEAD) {
+                p[i][j].age = 0;
+                p[i][j].col.r = 0xCC;
+                p[i][j].col.g = 0xCC;
+                p[i][j].col.b = 0xCC;
             }
-            else if (c[i][j] == LIVE)
-            {
-                p[i][j].col.r = 0;
-                p[i][j].col.g = 0xFF;
-                p[i][j].col.b = 0;
+            else if (c[i][j] == LIVE) {
+                if (p[i][j].age/0x06 < 0x10) {
+                    ++p[i][j].age;
+                }
+                p[i][j].col.r = 0x30 + p[i][j].age/0x06*0x1;
+                p[i][j].col.g = 0x90 - p[i][j].age/0x06*0x7;
+                p[i][j].col.b = 0x00;
             }
-            else
-            {
+            else {
                 printf("Error: chars[%i %i] == %c\n", i, j, c[i][j]);
                 break;
             }
         }
     }
 }
-void renderGrid(SDL_Renderer* renderer, struct px arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE])
-{
+void renderGrid(SDL_Renderer* renderer, struct px arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE]) {
     int i, j;
 
     //render pixel array
-    for ( i = 0; i < WIN_WIDTH/PX_SIZE; ++i )
-    {
-        for ( j = 0; j < WIN_HEIGHT/PX_SIZE; ++j )
-        {
+    for ( i = 0; i < WIN_WIDTH/PX_SIZE; ++i ) {
+        for ( j = 0; j < WIN_HEIGHT/PX_SIZE; ++j ) {
             SDL_SetRenderDrawColor(renderer, arr[i][j].col.r, arr[i][j].col.g, arr[i][j].col.b, arr[i][j].col.a);
             SDL_RenderFillRect(renderer, &arr[i][j].loc);
         }
     }
 }
-void renderRadio(SDL_Renderer* renderer, struct radio* elem)
-{
+void renderRadio(SDL_Renderer* renderer, struct radio* elem) {
     //render radio button box
     SDL_SetRenderDrawColor( renderer, elem->col.r, elem->col.g, elem->col.b, elem->col.a );
     SDL_RenderFillRect( renderer, &elem->button );
@@ -465,15 +416,13 @@ void renderRadio(SDL_Renderer* renderer, struct radio* elem)
 }
 //object generators
 //Statics
-void addBlock(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
-{
+void addBlock(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y) {
     arr[x+0][y+0] = LIVE;
     arr[x+0][y+1] = LIVE;
     arr[x+1][y+0] = LIVE;
     arr[x+1][y+1] = LIVE;
 }
-void addBeehive(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
-{
+void addBeehive(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y) {
     arr[x+0][y+1] = LIVE;
     arr[x+1][y+0] = LIVE;
     arr[x+1][y+2] = LIVE;
@@ -481,8 +430,7 @@ void addBeehive(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
     arr[x+2][y+2] = LIVE;
     arr[x+3][y+1] = LIVE;
 }
-void addLoaf(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
-{
+void addLoaf(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y) {
     arr[x+0][y+1] = LIVE;
     arr[x+1][y+0] = LIVE;
     arr[x+1][y+2] = LIVE;
@@ -491,30 +439,26 @@ void addLoaf(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
     arr[x+3][y+1] = LIVE;
     arr[x+3][y+2] = LIVE;
 }
-void addBoat(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
-{
+void addBoat(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y) {
     arr[x+0][y+0] = LIVE;
     arr[x+0][y+1] = LIVE;
     arr[x+1][y+0] = LIVE;
     arr[x+1][y+2] = LIVE;
     arr[x+2][y+1] = LIVE;
 }
-void addTub(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
-{
+void addTub(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y) {
     arr[x+0][y+1] = LIVE;
     arr[x+1][y+0] = LIVE;
     arr[x+1][y+2] = LIVE;
     arr[x+2][y+1] = LIVE;
 }
 //Oscillators
-void addBlinker(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
-{
+void addBlinker(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y) {
     arr[x+1][y+0] = LIVE;
     arr[x+1][y+1] = LIVE;
     arr[x+1][y+2] = LIVE;
 }
-void addToad(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
-{
+void addToad(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y) {
     arr[x+0][y+1] = LIVE;
     arr[x+0][y+2] = LIVE;
     arr[x+1][y+3] = LIVE;
@@ -522,13 +466,11 @@ void addToad(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
     arr[x+3][y+1] = LIVE;
     arr[x+3][y+2] = LIVE;
 }
-void addBeacon(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
-{
+void addBeacon(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y) {
     addBlock(arr, x, y);
     addBlock(arr, x+2, y+2);
 }
-void addPulsar(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
-{
+void addPulsar(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y) {
     //left bars
     arr[x+0][y+2] = LIVE;
     arr[x+0][y+3] = LIVE;
@@ -587,8 +529,7 @@ void addPulsar(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
     arr[x+5][y+4] = LIVE;
     
 }
-void addTumbler(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
-{
+void addTumbler(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y) {
     //left pair
     arr[x+0][y+1] = LIVE;
     arr[x+0][y+2] = LIVE;
@@ -613,8 +554,7 @@ void addTumbler(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
     arr[x+8][y+1] = LIVE;
     arr[x+8][y+2] = LIVE;
 }
-void addUnix(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
-{
+void addUnix(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y) {
     //top block
     addBlock(arr, x+1, y+0);
     //right block
@@ -631,8 +571,7 @@ void addUnix(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
     arr[x+2][y+7] = LIVE;
     arr[x+3][y+7] = LIVE;
 }
-void addPentadecathlon(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
-{
+void addPentadecathlon(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y) {
     //top T part
     arr[x+0][y+2] = LIVE;
     arr[x+1][y+0] = LIVE;
@@ -661,16 +600,14 @@ void addPentadecathlon(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, i
     arr[x+2][y+13] = LIVE;
 }
 //Spaceships
-void addGlider(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
-{
+void addGlider(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y) {
     arr[x+1][y+0] = LIVE;
     arr[x+2][y+1] = LIVE;
     arr[x+0][y+2] = LIVE;
     arr[x+1][y+2] = LIVE;
     arr[x+2][y+2] = LIVE;
 }
-void addLWSS(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
-{
+void addLWSS(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y) {
     addBlock(arr, x, y+1);
     addBlock(arr, x+1, y);
     //bottom right L
@@ -682,8 +619,7 @@ void addLWSS(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
     arr[x+4][y+2] = LIVE;
 }
 //Guns
-void addGliderGun(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
-{
+void addGliderGun(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y) {
     //make glider gun; L2R
     //left block
     addBlock(arr, x, y+4);
@@ -744,8 +680,7 @@ void addGliderGun(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
     addBlock(arr, x+34, y+2);
 }
 //Shuttles
-void addTwinBeeShuttle(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
-{
+void addTwinBeeShuttle(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y) {
     //Top-Left block
     addBlock(arr, x+0, y+1);
     //Bottom-Left block
@@ -771,8 +706,7 @@ void addTwinBeeShuttle(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, i
     //Right block
     addBlock(arr, x+27, y+1);
 }
-void addQueenBeeShuttle(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)  //trans
-{
+void addQueenBeeShuttle(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y) { //trans 
     //left block
     addBlock(arr, x+0, y+3);
     //queen
@@ -781,12 +715,10 @@ void addQueenBeeShuttle(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, 
     addBlock(arr, x+20, y+2);
 }
 //other
-void addPx(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
-{
+void addPx(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y) {
     arr[x+0][y+0] = LIVE;
 }
-void addQueenBee(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
-{
+void addQueenBee(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y) {
     //tail
     arr[x][y] = LIVE;
     arr[x][y+1] = LIVE;
@@ -803,8 +735,7 @@ void addQueenBee(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
     arr[x+3][y+4] = LIVE;
     arr[x+4][y+3] = LIVE;
 }
-void addAcorn(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
-{
+void addAcorn(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y) {
     //left 3
     arr[x+0][y+2] = LIVE;
     arr[x+1][y+2] = LIVE;
@@ -815,8 +746,7 @@ void addAcorn(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
     arr[x+5][y+2] = LIVE;
     arr[x+6][y+2] = LIVE;
 }
-void addSwitchEngine(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
-{
+void addSwitchEngine(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y) {
     //left 3
     arr[x+0][y+1] = LIVE;
     arr[x+1][y+0] = LIVE;
@@ -829,8 +759,7 @@ void addSwitchEngine(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int
     arr[x+4][y+3] = LIVE;
     arr[x+5][y+3] = LIVE;
 }
-void addBHeptomino(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
-{
+void addBHeptomino(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y) {
     arr[x+0][y+0] = LIVE;
     arr[x+0][y+1] = LIVE;
     arr[x+1][y+1] = LIVE;
@@ -840,8 +769,7 @@ void addBHeptomino(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y
     arr[x+3][y+0] = LIVE;
 }
 //Lakes
-void addPrePond(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
-{
+void addPrePond(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y) {
     //triple
     arr[x+0][y+1] = LIVE;
     arr[x+1][y+0] = LIVE;
@@ -849,8 +777,7 @@ void addPrePond(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
     //tail
     arr[x+2][y+2] = LIVE;
 }
-void addPond(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
-{
+void addPond(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y) {
     //top
     arr[x+1][y+0] = LIVE;
     arr[x+2][y+0] = LIVE;
@@ -864,8 +791,7 @@ void addPond(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
     arr[x+0][y+1] = LIVE;
     arr[x+0][y+2] = LIVE;
 }
-void addLake(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y)
-{
+void addLake(char arr[WIN_WIDTH/PX_SIZE][WIN_HEIGHT/PX_SIZE], int x, int y) {
     //top (going clockwise)
     arr[x+4][y+0] = LIVE;
     arr[x+5][y+0] = LIVE;
